@@ -26,3 +26,5 @@
 .buildpath
 /application/config/config.php
 application/config/_config.php
+.htaccess
+.htpasswd
