@@ -1,0 +1,17 @@
+AuthType Basic
+AuthName "Zugriff verweigert - Bitte User und Passwort eingeben"
+AuthUserFile /home/www-data/limesurvey/.htpasswd
+Require valid-user
+
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+
+    # if a directory or a file exists, use it directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+
+    # otherwise forward it to index.php
+    RewriteRule . index.php
+</IfModule>
+# General setting to properly handle LimeSurvey paths
+# AcceptPathInfo on
