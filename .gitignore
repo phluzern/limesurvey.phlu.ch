@@ -28,3 +28,4 @@
 application/config/_config.php
 .htaccess
 .htpasswd
+third_party/kcfinder/cache/
