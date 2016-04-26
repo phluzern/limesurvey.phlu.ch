@@ -1802,8 +1802,6 @@ function createFieldMap($surveyid, $style='short', $force_refresh=false, $questi
     if (isset(Yii::app()->session['fieldmap-' . $surveyid . $sLanguage]) && !$force_refresh && $questionid == false) {
         return Yii::app()->session['fieldmap-' . $surveyid . $sLanguage];
     }
-    $sOldLanguage=App()->language;
-    App()->setLanguage($sLanguage);
     $fieldmap["id"]=array("fieldname"=>"id", 'sid'=>$surveyid, 'type'=>"id", "gid"=>"", "qid"=>"", "aid"=>"");
     if ($style == "full")
     {
@@ -1904,6 +1902,8 @@ function createFieldMap($surveyid, $style='short', $force_refresh=false, $questi
         }
     }
 
+    $sOldLanguage=App()->language;
+    App()->setLanguage($sLanguage);
     // Collect all default values once so don't need separate query for each question with defaults
     // First collect language specific defaults
     $defaultsQuery = "SELECT a.qid, a.sqid, a.scale_id, a.specialtype, a.defaultvalue"
@@ -2783,7 +2783,7 @@ function questionAttributes($returnByName=false)
         'sortorder'=>100,
         //'inputtype'=>'integer',
         'inputtype'=>'columns',
-        'default'=>'6',
+        'default'=>'1',
         'min'=>'1',
         'max'=>'12',
         "help"=>gT('The answer options will be distributed across the number of columns set here'),
@@ -2909,7 +2909,7 @@ function questionAttributes($returnByName=false)
         "caption"=>gT('Sub-question validation tip'));
 
         $qattributes["exclude_all_others"]=array(
-        "types"=>":ABCEFMPKQ",
+        "types"=>"ABCEFMPKQ",
         'category'=>gT('Logic'),
         'sortorder'=>130,
         'inputtype'=>'text',
@@ -3235,7 +3235,7 @@ function questionAttributes($returnByName=false)
         //    "caption"=>gT('Value equals SGQA'));
 
         $qattributes["num_value_int_only"]=array(
-        "types"=>"N",
+        "types"=>"NK",
         'category'=>gT('Input'),
         'sortorder'=>100,
         'inputtype'=>'singleselect',
@@ -7047,6 +7047,7 @@ function getLabelSets($languages = null)
 
 function getHeader($meta = false)
 {
+    /* Todo : move this to layout/public.html */
     global $embedded,$surveyid ;
     Yii::app()->loadHelper('surveytranslator');
 
@@ -7063,7 +7064,7 @@ function getHeader($meta = false)
     {
         $languagecode = Yii::app()->getConfig('defaultlang');
     }
-
+    App()->getClientScript()->registerPackage('fontawesome');
     $header=  "<!DOCTYPE html>\n"
     . "<html lang=\"{$languagecode}\"";
 
@@ -7082,7 +7083,7 @@ function getHeader($meta = false)
         return $header;
     }
 
-    global $embedded_headerfunc;
+    global $embedded_headerfunc; // Did this work ? Can be removed or not ?
 
     if ( function_exists( $embedded_headerfunc ) )
         return $embedded_headerfunc($header);

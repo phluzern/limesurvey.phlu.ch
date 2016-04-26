@@ -39,11 +39,11 @@ class SurveyAdmin extends Survey_Common_Action
     }
 
     /**
-    * Loads list of surveys and it's few quick properties.
-    *
-    * @access public
-    * @return void
-    */
+     * Loads list of surveys and its few quick properties.
+     *
+     * @access public
+     * @return void
+     */
     public function index()
     {
         $this->getController()->redirect(array('admin/survey/sa/listsurveys'));
@@ -131,7 +131,10 @@ class SurveyAdmin extends Survey_Common_Action
     {
         App()->getClientScript()->registerPackage('jqgrid');
         if (!Permission::model()->hasGlobalPermission('surveys','create'))
-            $this->getController()->error('No permission');
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
+        }
 
         $this->_registerScriptFiles();
         Yii::app()->loadHelper('surveytranslator');
@@ -175,7 +178,11 @@ class SurveyAdmin extends Survey_Common_Action
             $this->getController()->error('Invalid survey ID');
 
         if (!Permission::model()->hasSurveyPermission($iSurveyID, 'surveysettings', 'read') && !Permission::model()->hasGlobalPermission('surveys','read'))
-            $this->getController()->error('No permission');
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
+        }
+
         if(Yii::app()->request->isPostRequest)
             $this->update($iSurveyID);
         $this->_registerScriptFiles();
@@ -229,24 +236,31 @@ class SurveyAdmin extends Survey_Common_Action
 
         if (!empty($iSurveyID))
         {
-            $aData['display']['menu_bars']['surveysummary'] = 'importsurveyresources';
+
 
             if (Yii::app()->getConfig('demoMode'))
-                $this->getController()->error(gT("Demo mode only: Uploading files is disabled in this system."), $this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}"));
+            {
+                Yii::app()->user->setFlash('error',gT("Demo mode only: Uploading files is disabled in this system."));
+                $this->getController()->redirect(array('admin/survey/sa/editlocalsettings/surveyid/' . $iSurveyID));
+            }
 
             // Create temporary directory
             // If dangerous content is unzipped
             // then no one will know the path
-            $extractdir = $this->_tempdir(Yii::app()->getConfig('tempdir'));
+            $extractdir  = $this->_tempdir(Yii::app()->getConfig('tempdir'));
             $zipfilename = $_FILES['the_file']['tmp_name'];
             $basedestdir = Yii::app()->getConfig('uploaddir') . "/surveys";
-            $destdir = $basedestdir . "/$iSurveyID/";
+            $destdir     = $basedestdir . "/$iSurveyID/";
 
             Yii::app()->loadLibrary('admin.pclzip');
             $zip = new PclZip($zipfilename);
 
             if (!is_writeable($basedestdir))
-                $this->getController()->error(sprintf(gT("Incorrect permissions in your %s folder."), $basedestdir), $this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}"));
+            {
+                Yii::app()->user->setFlash('error',sprintf(gT("Incorrect permissions in your %s folder."), $basedestdir));
+                $this->getController()->redirect(array('admin/survey/sa/editlocalsettings/surveyid/' . $iSurveyID));
+            }
+
 
             if (!is_dir($destdir))
                 mkdir($destdir);
@@ -257,8 +271,10 @@ class SurveyAdmin extends Survey_Common_Action
             if (is_file($zipfilename))
             {
                 if ($zip->extract($extractdir) <= 0)
-                    $this->getController()->error(gT("This file is not a valid ZIP file archive. Import failed. " . $zip->errorInfo(true)), $this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}"));
-
+                {
+                    Yii::app()->user->setFlash('error',gT("This file is not a valid ZIP file archive. Import failed. "). $zip->errorInfo(true) );
+                    $this->getController()->redirect(array('admin/survey/sa/editlocalsettings/surveyid/' . $iSurveyID));
+                }
                 // now read tempdir and copy authorized files only
                 $folders = array('flash', 'files', 'images');
                 foreach ($folders as $folder)
@@ -275,17 +291,23 @@ class SurveyAdmin extends Survey_Common_Action
                 unlink($zipfilename);
 
                 if (is_null($aErrorFilesInfo) && is_null($aImportedFilesInfo))
-                    $this->getController()->error(gT("This ZIP archive contains no valid Resources files. Import failed."), $this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}"));
+                {
+                    Yii::app()->user->setFlash('error',gT("This ZIP archive contains no valid Resources files. Import failed."));
+                    $this->getController()->redirect(array('admin/survey/sa/editlocalsettings/surveyid/' . $iSurveyID));
+                }
             }
             else
-                $this->getController()->error(sprintf(gT("An error occurred uploading your file. This may be caused by incorrect permissions in your %s folder."), $basedestdir), $this->getController()->createUrl("admin/survey/sa/view/surveyid/{$iSurveyID}"));
+            {
 
+                Yii::app()->user->setFlash('error',sprintf(gT("An error occurred uploading your file. This may be caused by incorrect permissions in your %s folder."), $basedestdir));
+                $this->getController()->redirect(array('admin/survey/sa/editlocalsettings/surveyid/' . $iSurveyID));
+            }
             $aData = array(
             'aErrorFilesInfo' => $aErrorFilesInfo,
             'aImportedFilesInfo' => $aImportedFilesInfo,
             'surveyid' => $iSurveyID
             );
-
+            $aData['display']['menu_bars']['surveysummary'] = true;
             $this->_renderWrappedTemplate('survey', 'importSurveyResources_view', $aData);
         }
     }
@@ -927,7 +949,11 @@ class SurveyAdmin extends Survey_Common_Action
             }
         }
         else
-            $this->getController()->error('Access denied');
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
+        }
+
 
         $this->_renderWrappedTemplate('survey', $aViewUrls, $aData);
     }
@@ -994,6 +1020,7 @@ class SurveyAdmin extends Survey_Common_Action
                 $aData['esrow'] = $esrow;
                 $aData['action'] = "editsurveylocalesettings";
                 $aData['i'] = $i;
+                $aData['dateformatdetails'] = getDateFormatData(Yii::app()->session['dateformat']);
                 $aTabContents[$sLang] = $this->getController()->renderPartial('/admin/survey/editLocalSettings_view', $aData, true);
             }
 
@@ -1029,7 +1056,14 @@ class SurveyAdmin extends Survey_Common_Action
 
             $aData['surveybar']['savebutton']['form'] = 'globalsetting';
             $aData['surveybar']['savebutton']['useformid'] = 'true';
-            $aData['surveybar']['saveandclosebutton']['form'] = true;
+            if (Permission::model()->hasSurveyPermission($iSurveyID, 'surveycontent', 'update'))
+            {
+                $aData['surveybar']['saveandclosebutton']['form'] = true;
+            }
+            else
+            {
+                unset($aData['surveybar']['savebutton']['form']);
+            }
 
             $aData['surveybar']['closebutton']['url'] = 'admin/survey/sa/view/surveyid/'.$iSurveyID;  // Close button
 
@@ -1037,7 +1071,8 @@ class SurveyAdmin extends Survey_Common_Action
         }
         else
         {
-            $this->getController()->error('Access denied');
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
         }
 
         $this->_renderWrappedTemplate('survey', $aViewUrls, $aData);
@@ -1207,7 +1242,13 @@ class SurveyAdmin extends Survey_Common_Action
         $thereIsPostData = $request->getPost('orgdata') !== null;
         $userHasPermissionToUpdate = Permission::model()->hasSurveyPermission($iSurveyID, 'surveycontent', 'update');
 
-        if ($thereIsPostData && $userHasPermissionToUpdate)
+        if (!$userHasPermissionToUpdate)
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
+        }
+
+        if ($thereIsPostData)
         {
             // Save the new ordering
             $this->_reorderGroup($iSurveyID);
@@ -1470,7 +1511,7 @@ class SurveyAdmin extends Survey_Common_Action
     */
     private function _tabPublicationAccess($esrow)
     {
-        $dateformatdetails = getDateFormatData(Yii::app()->session['dateformat']);
+        $aData['dateformatdetails'] = getDateFormatData(Yii::app()->session['dateformat']);
         $startdate = '';
         if ($esrow['startdate'])
         {

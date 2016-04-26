@@ -34,18 +34,18 @@
     function getDateFormatData($iDateFormat=0,$sLanguageCode='en')
     {
         $aDateFormats= array(
-        1=> array ('phpdate' => 'd.m.Y', 'jsdate' => 'dd.mm.yy', 'dateformat' => gT('dd.mm.yyyy')),
-        2=> array ('phpdate' => 'd-m-Y', 'jsdate' => 'dd-mm-yy', 'dateformat' => gT('dd-mm-yyyy')),
-        3=> array ('phpdate' => 'Y.m.d', 'jsdate' => 'yy.mm.dd', 'dateformat' => gT('yyyy.mm.dd')),
-        4=> array ('phpdate' => 'j.n.Y', 'jsdate' => 'd.m.yy',   'dateformat' => gT('d.m.yyyy')),
-        5=> array ('phpdate' => 'd/m/Y', 'jsdate' => 'dd/mm/yy', 'dateformat' => gT('dd/mm/yyyy')),
-        6=> array ('phpdate' => 'Y-m-d', 'jsdate' => 'yy-mm-dd', 'dateformat' => gT('yyyy-mm-dd')),
-        7=> array ('phpdate' => 'Y/m/d', 'jsdate' => 'yy/mm/dd', 'dateformat' => gT('yyyy/mm/dd')),
-        8=> array ('phpdate' => 'j/n/Y', 'jsdate' => 'd/m/yy',   'dateformat' => gT('d/m/yyyy')),
-        9=> array ('phpdate' => 'm-d-Y', 'jsdate' => 'mm-dd-yy', 'dateformat' => gT('mm-dd-yyyy')),
-        10=>array ('phpdate' => 'm.d.Y', 'jsdate' => 'mm.dd.yy', 'dateformat' => gT('mm.dd.yyyy')),
-        11=>array ('phpdate' => 'm/d/Y', 'jsdate' => 'mm/dd/yy', 'dateformat' => gT('mm/dd/yyyy')),
-        12=>array ('phpdate' => 'j-n-Y', 'jsdate' => 'd-m-yy',   'dateformat' => gT('d-m-yyyy'))
+        1=> array ('phpdate' => 'd.m.Y', 'jsdate' => 'dd.mm.yyyy', 'dateformat' => gT('dd.mm.yyyy')),
+        2=> array ('phpdate' => 'd-m-Y', 'jsdate' => 'dd-mm-yyyy', 'dateformat' => gT('dd-mm-yyyy')),
+        3=> array ('phpdate' => 'Y.m.d', 'jsdate' => 'yyyy.mm.dd', 'dateformat' => gT('yyyy.mm.dd')),
+        4=> array ('phpdate' => 'j.n.Y', 'jsdate' => 'd.m.yyyy',   'dateformat' => gT('d.m.yyyy')),
+        5=> array ('phpdate' => 'd/m/Y', 'jsdate' => 'dd/mm/yyyy', 'dateformat' => gT('dd/mm/yyyy')),
+        6=> array ('phpdate' => 'Y-m-d', 'jsdate' => 'yyyy-mm-dd', 'dateformat' => gT('yyyy-mm-dd')),
+        7=> array ('phpdate' => 'Y/m/d', 'jsdate' => 'yyyy/mm/dd', 'dateformat' => gT('yyyy/mm/dd')),
+        8=> array ('phpdate' => 'j/n/Y', 'jsdate' => 'd/m/yyyy',   'dateformat' => gT('d/m/yyyy')),
+        9=> array ('phpdate' => 'm-d-Y', 'jsdate' => 'mm-dd-yyyy', 'dateformat' => gT('mm-dd-yyyy')),
+        10=>array ('phpdate' => 'm.d.Y', 'jsdate' => 'mm.dd.yyyy', 'dateformat' => gT('mm.dd.yyyy')),
+        11=>array ('phpdate' => 'm/d/Y', 'jsdate' => 'mm/dd/yyyy', 'dateformat' => gT('mm/dd/yyyy')),
+        12=>array ('phpdate' => 'j-n-Y', 'jsdate' => 'd-m-yyyy',   'dateformat' => gT('d-m-yyyy'))
         );
 
         if ($iDateFormat > 12 || $iDateFormat<0) {
@@ -368,13 +368,6 @@
         $supportedLanguages['ja']['rtl'] = false;
         $supportedLanguages['ja']['dateformat'] = 6;
         $supportedLanguages['ja']['radixpoint'] = 0;
-
-        // Kazakh
-        $supportedLanguages['kk']['description'] = gT('Kazakh');
-        $supportedLanguages['kk']['nativedescription'] = 'Qazaq&#351;a';
-        $supportedLanguages['kk']['rtl'] = false;
-        $supportedLanguages['kk']['dateformat'] = 1;
-        $supportedLanguages['kk']['radixpoint'] = 1;
 
         // Kinyarwanda
         $supportedLanguages['rw']['description'] = gT('Kinyarwanda');
@@ -796,8 +789,8 @@
     */
     function getJSDateFromDateFormat($sDateformat)
     {
-        // The only difference from dateformat is that Jsdate does not support truncated years
-        return str_replace(array('yy'), array('y'), $sDateformat);
+        // No constraints for Bootstrap time-picker
+        return $sDateformat;
     }
 
 
@@ -917,15 +910,15 @@
             else { return $detaillanguages[$codetosearch]['description'];}
         }
         else
-            // else return default en code
-            return false;
+            // else return code
+            return $codetosearch;
     }
 
 
     function getLanguageRTL($sLanguageCode)
     {
         $aLanguageData= getLanguageData(false,$sLanguageCode);
-        if (isset($aLanguageData[$sLanguageCode]['rtl']))
+        if (isset($aLanguageData[$sLanguageCode]) && isset($aLanguageData[$sLanguageCode]['rtl']))
         {
             return $aLanguageData[$sLanguageCode]['rtl'];
         }

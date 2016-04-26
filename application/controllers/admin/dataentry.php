@@ -231,6 +231,20 @@ class dataentry extends Survey_Common_Action
     {
         unset($aEncodings['auto']);
         asort($aEncodings);
+
+        // Get default character set from global settings
+        $thischaracterset = getGlobalSetting('characterset');
+
+        // If no encoding was set yet, use the old "utf8" default
+        if($thischaracterset == "")
+        {
+            $thischaracterset = "utf8";
+        }
+
+        // Create encodings list using the Yii's CHtml helper
+        $charsetsout = CHtml::listOptions($thischaracterset, $aEncodings, $aEncodings);
+
+        $aData['charsetsout'] = $charsetsout;
         $aData['aEncodings']=$aEncodings;
         $aData['tableExists'] = tableExists("{{survey_$surveyid}}");
 
@@ -716,6 +730,21 @@ class dataentry extends Survey_Common_Action
                                 'onkeypress' => 'return goodchars(event,\''.$goodchars.'\')'
                                 )
                                 );
+                                /*
+                                Yii::app()->getController()->widget('yiiwheels.widgets.datetimepicker.WhDateTimePicker', array(
+                                    'name' => $fname['fieldname'],
+                                    'value' => $thisdate,
+                                    'pluginOptions' => array(
+                                        'format' => reverseDateToFitDatePicker($dateformatdetails['dateformat']) . " HH:mm",
+                                        'singleDatePicker' => true,
+                                        'startDate' => date("Y-m-d", time()),
+                                        'drops' => 'up',  // TODO: Does not work. Why?
+                                        'timePicker' => true,
+                                        'timePicker12Hour' => false,  // NB: timePicker24Hour = true does not work
+                                        'timePickerIncrement' => 1
+                                    )
+                                ));
+                                */
                                 $aDataentryoutput .= CHtml::hiddenField('dateformat'.$fname['fieldname'], $dateformatdetails['jsdate'],
                                 array( 'id' => "dateformat{$fname['fieldname']}" )
                                 );
@@ -1855,11 +1884,10 @@ class dataentry extends Survey_Common_Action
                                     $message .= gT("Name").": ".$saver['identifier']."\n";
                                     $message .= gT("Password").": ".$saver['password']."\n\n";
                                     $message .= gT("Reload your survey by clicking on the following link (or pasting it into your browser):")."\n";
-                                    $message .= Yii::app()->getController()->createAbsoluteUrl("/survey/index/sid/{$iSurveyID}/loadall/reload/scid/{$scid}/loadname/".rawurlencode ($saver['identifier'])."/loadpass/".rawurlencode ($saver['password'])."/lang/".rawurlencode($saver['language']));
-                                    if (isset($tokendata['token'])) { $message .= "/token/".rawurlencode($tokendata['token']); }
-
+                                    $aParams=array('lang'=>$saver['language'],'loadname'=>$saver['identifier'],'loadpass'=>$saver['password']);
+                                    if (isset($tokendata['token'])) { $aParams['token']= $tokendata['token']; }
+                                    $message .= Yii::app()->getController()->createAbsoluteUrl("/survey/index/sid/{$iSurveyID}/loadall/reload/scid/{$scid}/",$aParams);
                                     $from = $thissurvey['adminemail'];
-
                                     if (SendEmailMessage($message, $subject, $saver['email'], $from, $sitename, false, getBounceEmail($surveyid)))
                                     {
                                         $emailsent="Y";

@@ -34,7 +34,7 @@ class SurveyRuntimeHelper {
         $html = '';
         $html .=  "\n\n<!-- PRESENT THE INDEX MENU -->\n";
         $html .=  CHtml::openTag('li', array('id' => 'index-menu', 'class'=>'dropdown'));
-        $html .=  CHtml::link(gT("Question index").'&nbsp<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle', 'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
+        $html .=  CHtml::link(gT("Question index").'&nbsp;<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle', 'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
         $html .=  CHtml::openTag('ul', array('class'=>'dropdown-menu'));
         foreach ($_SESSION[$LEMsessid]['grouplist'] as $key => $group)
         {
@@ -76,7 +76,7 @@ class SurveyRuntimeHelper {
     {
         $html = '';
         $html .=  CHtml::openTag('li', array('id' => 'index', 'class'=>'dropdown'));
-        $html .=  CHtml::link(gT("Question index").'&nbsp<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle',  'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
+        $html .=  CHtml::link(gT("Question index").'&nbsp;<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle',  'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
         $html .=  CHtml::openTag('ul', array('class'=>'dropdown-menu'));
         $html .=  CHtml::openTag('li');
         $html .=  CHtml::link(gT("Question by question mode not yet supported."), array('#'));
@@ -92,7 +92,7 @@ class SurveyRuntimeHelper {
         $html = '';
         $html .=  "\n\n<!-- PRESENT THE INDEX -->\n";
         $html .=  CHtml::openTag('li', array('id' => 'index', 'class'=>'dropdown'));
-        $html .=  CHtml::link(gT("Question index").'&nbsp<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle',  'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
+        $html .=  CHtml::link(gT("Question index").'&nbsp;<span class="caret"></span>', array('#'), array('class'=>'dropdown-toggle',  'data-toggle'=>"dropdown", 'role'=>"button", 'aria-haspopup'=>"true", 'aria-expanded'=>"false"));
         $html .=  CHtml::openTag('ul', array('class'=>'dropdown-menu'));
 
         $stepIndex = LimeExpressionManager::GetStepIndexInfo();
@@ -352,15 +352,7 @@ class SurveyRuntimeHelper {
         $sTemplatePath = $oTemplate->path;
         $sTemplateViewPath = $oTemplate->viewPath;
 
-        //$sTemplatePath=getTemplatePath(Yii::app()->getConfig("defaulttemplate")).DIRECTORY_SEPARATOR;
-
-        // TODO : check if necessary :
-        /*
-        if (isset ($_SESSION['survey_'.$surveyid]['templatepath']))
-        {
-            $sTemplatePath=$_SESSION['survey_'.$surveyid]['templatepath'];
-        }
-        */
+        $flashmessage = makeFlashMessage();
 
         // $LEMdebugLevel - customizable debugging for Lime Expression Manager
         $LEMdebugLevel = 0;   // LEM_DEBUG_TIMING;    // (LEM_DEBUG_TIMING + LEM_DEBUG_VALIDATION_SUMMARY + LEM_DEBUG_VALIDATION_DETAIL);
@@ -428,8 +420,6 @@ class SurveyRuntimeHelper {
             {
                 buildsurveysession($surveyid);
 
-                //TODO : check if necessary
-                //$sTemplatePath = $_SESSION[$LEMsessid]['templatepath'];
 
                 if($surveyid != LimeExpressionManager::getLEMsurveyId())
                     LimeExpressionManager::SetDirtyFlag();
@@ -720,6 +710,7 @@ class SurveyRuntimeHelper {
                     sendCacheHeaders();
                     doHeader();
 
+
                     echo templatereplace(file_get_contents($sTemplateViewPath."startpage.pstpl"), array(), $redata, 'SubmitStartpageI', false, NULL, array(), true );
 
                     //Check for assessments
@@ -799,7 +790,7 @@ class SurveyRuntimeHelper {
 
                     if (trim(str_replace(array('<p>','</p>'),'',$thissurvey['surveyls_endtext'])) == '')
                     {
-                        $completed = "<br /><input type='hidden' class='hidemenubutton'/><span class='success'>" . gT("Thank you!") . "</span><br /><br />\n\n"
+                        $completed = "<br /><input type='hidden' class='hidemenubutton'/><span>" . gT("Thank you!") . "</span><br /><br />\n\n"
                         . gT("Your survey responses have been recorded.") . "<br /><br />\n";
                     }
                     else

@@ -26,8 +26,10 @@ class GlobalSettings extends Survey_Common_Action
     {
         parent::__construct($controller, $id);
 
-        if (!Permission::model()->hasGlobalPermission('settings','read')) {
-            die();
+        if (! Permission::model()->hasGlobalPermission('settings', 'read') )
+        {
+            Yii::app()->session['flashmessage'] =gT('Access denied!');
+            $this->getController()->redirect(App()->createUrl("/admin"));
         }
     }
 
@@ -98,6 +100,15 @@ class GlobalSettings extends Survey_Common_Action
         $data['fullpagebar']['saveandclosebutton']['form'] = 'frmglobalsettings';
         $data['fullpagebar']['closebutton']['url'] = 'admin/';  // Close button
 
+        // List of available encodings
+        $data['aEncodings'] = aEncodingsArray();
+
+        // Sort list of encodings
+        asort($data['aEncodings']);
+
+        // Get current setting from DB
+        $data['thischaracterset'] = getGlobalSetting('characterset');
+
         $this->_renderWrappedTemplate('', 'globalSettings_view', $data);
     }
 
@@ -160,21 +171,6 @@ class GlobalSettings extends Survey_Common_Action
         $sAdmintheme = sanitize_paranoid_string($_POST['admintheme']);
         setGlobalSetting('admintheme', $sAdmintheme);
 
-        // we check if it's a user theme
-        $usertemplatethemerootdir = Yii::app()->getConfig("uploaddir").'/admintheme/'.$sAdmintheme;
-        if ($usertemplatethemerootdir && file_exists($usertemplatethemerootdir) && is_dir($usertemplatethemerootdir) )
-        {
-            $adminimagebaseurl = Yii::app()->getBaseUrl(true)."/upload/admintheme/$sAdmintheme/images/";
-            setGlobalSetting('adminimagebaseurl', $adminimagebaseurl);
-            setGlobalSetting('adminimageurl', $adminimagebaseurl.'images/14/');
-        }
-        else
-        {
-            $adminimagebaseurl = Yii::app()->getBaseUrl(true)."/styles/$sAdmintheme/images/";
-            setGlobalSetting('adminimagebaseurl', $adminimagebaseurl);
-            setGlobalSetting('adminimageurl', $adminimagebaseurl.'/14/');
-        }
-
         //setGlobalSetting('adminthemeiconsize', trim(file_get_contents(Yii::app()->getConfig("styledir").DIRECTORY_SEPARATOR.sanitize_paranoid_string($_POST['admintheme']).DIRECTORY_SEPARATOR.'iconsize')));
         setGlobalSetting('emailmethod', strip_tags($_POST['emailmethod']));
         setGlobalSetting('emailsmtphost', strip_tags(returnGlobal('emailsmtphost')));
@@ -236,6 +232,7 @@ class GlobalSettings extends Survey_Common_Action
         setGlobalSetting('surveyPreview_require_Auth', $_POST['surveyPreview_require_Auth']);
         setGlobalSetting('RPCInterface', $_POST['RPCInterface']);
         setGlobalSetting('rpc_publish_api', (bool) $_POST['rpc_publish_api']);
+        setGlobalSetting('characterset', $_POST['characterset']);
         $savetime = ((float)$_POST['timeadjust'])*60 . ' minutes'; //makes sure it is a number, at least 0
         if ((substr($savetime, 0, 1) != '-') && (substr($savetime, 0, 1) != '+')) {
             $savetime = '+' . $savetime;

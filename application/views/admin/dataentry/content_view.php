@@ -55,10 +55,19 @@
                 ?>
             <div class="col-sm-10">
                 <?php if(canShowDatePicker($dateformatdetails)): ?>
-                    <?php
-                    $goodchars = str_replace( array("m","d","y", "H", "M"), "", $dateformatdetails['dateformat']);
-                    $goodchars = "0123456789".$goodchars[0]; ?>
-                    <input type='text' class='popupdate' size='12' name='<?php echo $fieldname; ?>' onkeypress="return goodchars(event,'<?php echo $goodchars; ?>')"/>
+                    <?php Yii::app()->getController()->widget('yiiwheels.widgets.datetimepicker.WhDateTimePicker', array(
+                        'name' => $fieldname,
+                        'pluginOptions' => array(
+                            'format' => reverseDateToFitDatePicker($dateformatdetails['dateformat']) . " HH:mm",
+                            'singleDatePicker' => true,
+                            'startDate' => date("Y-m-d", time()),
+                            'drops' => 'up',  // TODO: Does not work. Why?
+                            'timePicker' => true,
+                            'timePicker12Hour' => false,  // NB: timePicker24Hour = true does not work?
+                            'timePicker24Hour' => true,
+                            'timePickerIncrement' => 1
+                        )
+                    )); ?>
                     <input type='hidden' name='dateformat<?php echo $fieldname; ?>' id='dateformat<?php echo $fieldname; ?>' value='<?php echo $dateformatdetails['jsdate']; ?>'  />
                 <?php else:?>
                     <input type='text' name='<?php echo $fieldname; ?>'/>
@@ -262,7 +271,13 @@
         <div class="col-sm-10">
             <?php
             if ($deqrow['other'] == "Y") {$meacount++;}
-            if ($dcols > 0 && $meacount >= $dcols)
+
+            /* This caused a regression in 2.5, BUT: code below ($mearesult->FetchRow())
+             * assumes that $mearesult sometimes could be an object,
+             * which is never true even in 2.06.
+             */
+            //if ($dcols > 0 && $meacount >= $dcols)
+            if (true)
             {
                 $width=sprintf("%0d", 100/$dcols);
                 $maxrows=ceil(100*($meacount/$dcols)/100); //Always rounds up to nearest whole number
@@ -289,16 +304,23 @@
             <?php }
             else
             {
-                while ($mearow = $mearesult->FetchRow())
-                { ?>
-                <input type='checkbox' class='checkboxbtn' name='<?php echo $fieldname.$mearow['code']; ?>' id='answer<?php echo $fieldname.$mearow['code']; ?>' value='Y'
-                    <?php if ($mearow['default_value'] == "Y") {  ?>checked<?php } ?>
-                    /><label for='<?php $fieldname.$mearow['code']; ?>'><?php echo $mearow['answer']; ?></label><br />
-                <?php }
-                if ($deqrow['other'] == "Y")
-                { ?>
-                <?php eT("Other",'html',$sDataEntryLanguage); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
-                <?php }
+                if (is_object($mearesult))
+                {
+                    while ($mearow = $mearesult->FetchRow())
+                    { ?>
+                    <input type='checkbox' class='checkboxbtn' name='<?php echo $fieldname.$mearow['code']; ?>' id='answer<?php echo $fieldname.$mearow['code']; ?>' value='Y'
+                        <?php if ($mearow['default_value'] == "Y") {  ?>checked<?php } ?>
+                        /><label for='<?php $fieldname.$mearow['code']; ?>'><?php echo $mearow['answer']; ?></label><br />
+                    <?php }
+                    if ($deqrow['other'] == "Y")
+                    { ?>
+                    <?php eT("Other",'html',$sDataEntryLanguage); ?> <input type='text' name='<?php echo $fieldname; ?>other' />
+                    <?php }
+                }
+                else
+                {
+                    throw new CException("\$mearesult should be an object here");
+                }
             }?>
         </div><?php
             break;

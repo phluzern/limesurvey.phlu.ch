@@ -38,6 +38,12 @@ class questiongroups extends Survey_Common_Action
         $action = $_POST['action'];
         $iSurveyID = $surveyid =  $aData['surveyid'] = (int)$_POST['sid'];
 
+        if (!Permission::model()->hasSurveyPermission($surveyid,'surveycontent','import'))
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(array('admin/survey/sa/listquestiongroups/surveyid/' . $surveyid));
+        }
+
         if ($action == 'importgroup')
         {
             $importgroup = "\n";
@@ -59,23 +65,30 @@ class questiongroups extends Survey_Common_Action
             if (isset($fatalerror))
             {
                 @unlink($sFullFilepath);
-                $this->getController()->error($fatalerror);
+                Yii::app()->user->setFlash('error', $fatalerror);
+                $this->getController()->redirect(array('admin/questiongroups/sa/importview/surveyid/' . $surveyid));
             }
 
             Yii::app()->loadHelper('admin/import');
 
             // IF WE GOT THIS FAR, THEN THE FILE HAS BEEN UPLOADED SUCCESFULLY
             if (strtolower($sExtension) == 'lsg')
+            {
                 $aImportResults = XMLImportGroup($sFullFilepath, $iSurveyID);
+            }
             else
-                $this->getController()->error('Unknown file extension');
+            {
+                Yii::app()->user->setFlash('error', gT("Unknown file extension"));
+                $this->getController()->redirect(array('admin/questiongroups/sa/importview/surveyid/' . $surveyid));
+            }
             LimeExpressionManager::SetDirtyFlag(); // so refreshes syntax highlighting
             fixLanguageConsistency($iSurveyID);
 
             if (isset($aImportResults['fatalerror']))
             {
                 unlink($sFullFilepath);
-                $this->getController()->error($aImportResults['fatalerror']);
+                Yii::app()->user->setFlash('error', $aImportResults['fatalerror']);
+                $this->getController()->redirect(array('admin/questiongroups/sa/importview/surveyid/' . $surveyid));
             }
 
             unlink($sFullFilepath);
@@ -121,7 +134,7 @@ class questiongroups extends Survey_Common_Action
         }
         else
         {
-            Yii::app()->session['flashmessage'] = gT("We are sorry but you don't have permissions to do this.");
+            Yii::app()->user->setFlash('error', gT("Access denied"));
             $this->getController()->redirect(array('admin/survey/sa/listquestiongroups/surveyid/' . $surveyid));
         }
     }
@@ -137,7 +150,7 @@ class questiongroups extends Survey_Common_Action
         $iSurveyID = $surveyid = sanitize_int($surveyid);
         $aViewUrls = $aData = array();
 
-        if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'read'))
+        if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'create'))
         {
             Yii::app()->session['FileManagerContext'] = "create:group:{$surveyid}";
 
@@ -161,7 +174,13 @@ class questiongroups extends Survey_Common_Action
             $aData['surveybar']['importquestiongroup'] = true;
             $aData['surveybar']['closebutton']['url'] = 'admin/survey/sa/listquestiongroups/surveyid/'.$surveyid;  // Close button
             $aData['surveybar']['savebutton']['form'] = true;
+            $aData['surveybar']['saveandclosebutton']['form'] = true;
             $this->_renderWrappedTemplate('survey/QuestionGroups', 'addGroup_view', $aData);
+        }
+        else
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
         }
     }
 
@@ -272,14 +291,25 @@ class questiongroups extends Survey_Common_Action
                     sprintf(gT("Q1 and Q3 calculated using %s"), "<a href='http://mathforum.org/library/drmath/view/60969.html' target='_blank'>".gT("minitab method")."</a>");
                 }
 
-
-
             }
 
             // http://local.lsinst/LimeSurvey_206/index.php/admin/survey/sa/view/surveyid/282267/gid/10
             // http://local.lsinst/LimeSurvey_206/index.php//282267/gid/10
 
-            $this->getController()->redirect(array('admin/questiongroups/sa/view/surveyid/' . $surveyid . '/gid/' . $gid));
+            if(Yii::app()->request->getPost('close-after-save') === 'true')
+            {
+                $this->getController()->redirect(array('admin/questiongroups/sa/view/surveyid/' . $surveyid . '/gid/' . $gid));
+            }
+            else
+            {
+                // After save, go to edit
+                $this->getController()->redirect(array("admin/questiongroups/sa/edit/surveyid/$surveyid/gid/$gid"));
+            }
+        }
+        else
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
         }
     }
 
@@ -309,6 +339,11 @@ class questiongroups extends Survey_Common_Action
                 Yii::app()->setFlashMessage(gT('Group could not be deleted'),'error');
             LimeExpressionManager::UpgradeConditionsToRelevance($iSurveyId);
             $this->getController()->redirect(array('admin/survey/sa/listquestiongroups/surveyid/' . $iSurveyId ));
+        }
+        else
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
         }
     }
 
@@ -361,7 +396,7 @@ class questiongroups extends Survey_Common_Action
         $gid = sanitize_int($gid);
         $aViewUrls = $aData = array();
 
-        if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'read'))
+        if (Permission::model()->hasSurveyPermission($surveyid, 'surveycontent', 'update'))
         {
             Yii::app()->session['FileManagerContext'] = "edit:group:{$surveyid}";
 
@@ -446,6 +481,11 @@ class questiongroups extends Survey_Common_Action
 
             $this->_renderWrappedTemplate('survey/QuestionGroups', 'editGroup_view', $aData);
         }
+        else
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
+        }
 
     }
 
@@ -514,6 +554,11 @@ class questiongroups extends Survey_Common_Action
                 $this->getController()->redirect(array('admin/questiongroups/sa/view/surveyid/' . $surveyid . '/gid/' . $gid));
 
             $this->getController()->redirect(array('admin/questiongroups/sa/edit/surveyid/' . $surveyid . '/gid/' . $gid));
+        }
+        else
+        {
+            Yii::app()->user->setFlash('error', gT("Access denied"));
+            $this->getController()->redirect(Yii::app()->request->urlReferrer);
         }
     }
 

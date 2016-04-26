@@ -41,13 +41,12 @@
                     <div class='row no-gutter'>
 
                         <!-- Brand -->
-                        <div class='col-sm-7'>
-                            <div class="brand-name-wrapper  hidden-xs">
-                                <a class="navbar-brand hideside toggleside" href="#">
-                                    <?php eT('General');?>
-                                </a>
+                        <a id='sidemenu-home' class="col-sm-7 navbar-brand hideside toggleside" href="<?php echo $this->createUrl("admin/survey/sa/view/surveyid/$surveyid"); ?>">
+                            <div class="brand-name-wrapper hidden-xs">
+                                    <span class="glyphicon glyphicon-home"></span>&nbsp;
+                                    <?php eT("Survey");?>
                             </div>
-                        </div>
+                        </a>
 
                         <!-- chevrons to stretch the side menu -->
                         <?php if (getLanguageRTL($_SESSION['adminlang'])): ?>
@@ -75,17 +74,11 @@
 
             </div>
 
-            <!-- Main Menu -->
-            <div class="side-menu-container  hidden-xs">
-                <ul class="nav navbar-nav sidemenuscontainer  hidden-xs">
+            <?php echo $quickmenu; ?>
 
-                    <!-- Link to survey summary-->
-                    <li class="toWhite <?php if( isset($sidemenu["survey_menu"]) ) echo 'active'; ?> ">
-                        <a href="<?php echo $this->createUrl("admin/survey/sa/view/surveyid/$surveyid"); ?>">
-                            <span class="glyphicon glyphicon-info-sign"></span>
-                            <?php eT("Survey");?>
-                        </a>
-                    </li>
+            <!-- Main Menu -->
+            <div class="side-menu-container hidden-xs">
+                <ul class="nav navbar-nav sidemenuscontainer  hidden-xs">
 
                     <!-- Question & Groups-->
                     <li class="panel panel-default dropdownlvl1" id="dropdown">
@@ -126,7 +119,7 @@
                                     <?php endif; ?>
 
                                     <!-- Organize questions -->
-                                    <?php if($surveycontent):?>
+                                    <?php if($surveycontentupdate):?>
                                         <?php if ($activated):?>
                                             <li class="disabled">
                                                 <a href='#'>

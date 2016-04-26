@@ -16,6 +16,7 @@
         <license>GNU General Public License version 2 or later</license>
         <version>1.0</version>
         <description>News paper LimeSurvey Template.</description>
+        <last_update>2016-04-12 19:46:00</last_update>
     </metadatas>
 
     <!--
@@ -26,6 +27,7 @@
         <css>
             <filename>css/jquery-ui-custom.css</filename>
             <filename>css/bootstrap-slider.css</filename>
+            <filename>css/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css</filename>
             <filename>css/news_paper.css</filename>
             <filename>css/template.css</filename>
         </css>
@@ -47,7 +49,7 @@
         <!-- The logo is used for now only for Surveys List  -->
         <logo>
             <filename>files/logo.png</filename>
-        </logo>        
+        </logo>
     </files>
 
     <!--

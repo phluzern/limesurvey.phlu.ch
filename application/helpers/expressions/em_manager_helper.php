@@ -2615,7 +2615,7 @@
                                     $subqValidSelector = $sq['jsVarName_on'];
                                 case 'N': //NUMERICAL QUESTION TYPE
                                     $sq_name = ($this->sgqaNaming)?$sq['rowdivid'].".NAOK":$sq['varName'].".NAOK";
-                                    $sq_eqn = 'is_int('.$sq_name.') || is_empty('.$sq_name.')';
+                                    $sq_eqn = '( is_int('.$sq_name.') || is_empty('.$sq_name.') )';
                                     break;
                                 default:
                                     break;
@@ -3288,11 +3288,11 @@
                     switch ($type)
                     {
                         case 'N':
-                            $qtips['default']='';
+                            unset($qtips['default']);
                             $qtips['value_integer']=$this->gT("Only an integer value may be entered in this field.");
                             break;
                         case 'K':
-                            $qtips['default']='';
+                            unset($qtips['default']);
                             $qtips['value_integer']=$this->gT("Only integer values may be entered in these fields.");
                             break;
                         default:
@@ -5395,13 +5395,18 @@
                             break;
                         case 'N': //NUMERICAL QUESTION TYPE
                         case 'K': //MULTIPLE NUMERICAL QUESTION
-                            // @todo Validate a DECIMAL(30.10)
-                            if (trim($val)=='' || !is_numeric($val))
+                            if (trim($val)=='' || !is_numeric($val)) // is_numeric error is done by EM : then show an error and same page again
                             {
                                 $val=NULL;  // since some databases can't store blanks in numerical inputs
                             }
+                            elseif(!preg_match("/^(\d{1,20}\.\d{0,10}|\d{1,20})$/",$val)) // DECIMAL(30,10)
+                            {
+                                // Here : we must ADD a message for the user and set the question "not valid" : show the same page + show with input-error class
+                                $val=NULL;
+                            }
                             break;
                         default:
+                            // @todo : control length of DB string, if answers in single choice is valid too (for example) ?
                             break;
                     }
 
@@ -5423,11 +5428,15 @@
 
                     if (!dbExecuteAssoc($query))
                     {
-                        echo submitfailed('');  // TODO - report SQL error?
+                        // TODO: This kills the session if adminemail is defined, so the queries below won't work.
+                        $message = submitfailed('', $query);  // TODO - report SQL error?
 
                         if (($this->debugLevel & LEM_DEBUG_VALIDATION_SUMMARY) == LEM_DEBUG_VALIDATION_SUMMARY) {
                             $message .= $this->gT('Error in SQL update');  // TODO - add  SQL error?
                         }
+
+                        LimeExpressionManager::addFrontendFlashMessage('error', $message, $this->sid);
+
                     }
                     // Save Timings if needed
                     elseif ($this->surveyOptions['savetimings']) {
@@ -6354,7 +6363,10 @@
             $mandatoryTip = '';
             if ($qrel && !$qhidden && ($qInfo['mandatory'] == 'Y'))
             {
-                $mandatoryTip = "<p class='errormandatory alert alert-danger' role='alert'><span class='glyphicon glyphicon-exclamation-sign'></span>&nbsp" . $LEM->gT('This question is mandatory') . "</p>";
+                //$mandatoryTip = "<p class='errormandatory alert alert-danger' role='alert'><span class='glyphicon glyphicon-exclamation-sign'></span>&nbsp" . $LEM->gT('This question is mandatory') . "</p>";
+                $mandatoryTip = Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                        'sMandatoryText'=>$LEM->gT('This question is mandatory'),
+                ), true);
                 switch ($qInfo['type'])
                 {
                     case 'M':
@@ -6368,7 +6380,10 @@
                         }
                         if (!($qInfo['type'] == '!' || $qInfo['type'] == 'L'))
                         {
-                            $mandatoryTip .= $LEM->gT('Please check at least one item.');
+                            $sMandatoryText = $LEM->gT('Please check at least one item.');
+                            $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                    'sMandatoryText'=>$sMandatoryText,
+                            ), true);
                         }
                         if ($qInfo['other']=='Y')
                         {
@@ -6379,7 +6394,12 @@
                             else {
                                 $othertext = $LEM->gT('Other:');
                             }
-                            $mandatoryTip .= "\n".sprintf($this->gT("If you choose '%s' please also specify your choice in the accompanying text field."),$othertext);
+                            //$mandatoryTip .= "\n".sprintf($this->gT("If you choose '%s' please also specify your choice in the accompanying text field."),$othertext);
+                            $sMandatoryText = "\n".sprintf($this->gT("If you choose '%s' please also specify your choice in the accompanying text field."),$othertext);
+                            $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                    'sMandatoryText'=>$sMandatoryText,
+                            ), true);
+
                         }
                         break;
                     case 'X':   // Boilerplate can never be mandatory
@@ -6401,7 +6421,10 @@
                         {
                             $qmandViolation = true; // TODO - what about 'other'?
                         }
-                        $mandatoryTip .= $LEM->gT('Please complete all parts').'.';
+                        $sMandatoryText = $LEM->gT('Please complete all parts').'.';
+                        $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                'sMandatoryText'=>$sMandatoryText,
+                        ), true);
                         break;
                     case ':':
                         $qattr = isset($LEM->qattr[$qid]) ? $LEM->qattr[$qid] : array();
@@ -6430,7 +6453,11 @@
                                     }
                                 }
                             }
-                            $mandatoryTip .= $LEM->gT('Please check at least one box per row').'.';
+                            $sMandatoryText = $LEM->gT('Please check at least one box per row').'.';
+                            $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                    'sMandatoryText'=>$sMandatoryText,
+                            ), true);
+
                         }
                         else
                         {
@@ -6438,7 +6465,10 @@
                             {
                                 $qmandViolation = true; // TODO - what about 'other'?
                             }
-                            $mandatoryTip .= $LEM->gT('Please complete all parts').'.';
+                            $sMandatoryText = $LEM->gT('Please complete all parts').'.';
+                            $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                    'sMandatoryText'=>$sMandatoryText,
+                            ), true);
                         }
                         break;
                     case 'R':
@@ -6446,7 +6476,10 @@
                         {
                             $qmandViolation = true; // TODO - what about 'other'?
                         }
-                        $mandatoryTip .= $LEM->gT('Please rank all items').'.';
+                        $sMandatoryText = $LEM->gT('Please rank all items').'.';
+                        $mandatoryTip .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/mandatory_tip', array(
+                                'sMandatoryText'=>$sMandatoryText,
+                        ), true);
                         break;
                     case 'O': //LIST WITH COMMENT drop-down/radio-button list + textarea
                         $_count=0;
@@ -6469,7 +6502,6 @@
                         }
                         break;
                 }
-                $mandatoryTip .= "</span></strong>\n";
             }
 
             /////////////////////////////////////////////////////////////
@@ -6528,12 +6560,16 @@
                     $stringToParse = '';
                     foreach ($LEM->qid2validationEqn[$qid]['tips'] as $vclass=>$vtip)
                     {
-                        $tipsDatas = array(
-                            'qid'   =>$qid,
-                            'vclass'=>$vclass,
-                            'vtip'  =>$vtip,
-                        );
-                        $stringToParse .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/tips', $tipsDatas, true);
+                        // Only add non-empty tip
+                        if (trim($vtip) != "")
+                        {
+                            $tipsDatas = array(
+                                'qid'   =>$qid,
+                                'vclass'=>$vclass,
+                                'vtip'  =>$vtip,
+                            );
+                            $stringToParse .= Yii::app()->getController()->renderPartial('/survey/system/questionhelp/tips', $tipsDatas, true);
+                        }
                     }
 
                     $prettyPrintValidTip = $stringToParse;
@@ -7188,6 +7224,7 @@
                             $relParts[] = "    }\n";
                             $relParts[] = "    else {\n";
                             $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . "$inputSelector').removeAttr('disabled');\n";
+                            $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . " th.answertext').removeClass('text-muted');\n";
                             $relParts[] = "    }\n";
                         }
                         $relParts[] = "    relChange" . $arg['qid'] . "=true;\n";
@@ -7200,9 +7237,11 @@
                             {
                                 $relParts[] = "    if ( " . $sq['irrelevantAndExclusiveJS'] . " ) {\n";
                                 $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . "$inputSelector').attr('disabled','disabled');\n";
+                                $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . " th.answertext').addClass('text-muted');\n";
                                 $relParts[] = "    }\n";
                                 $relParts[] = "    else {\n";
                                 $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . "$inputSelector').removeAttr('disabled');\n";
+                                $relParts[] = "      $('#javatbd" . $sq['rowdivid'] . " th.answertext').removeClass('text-muted');\n";
                                 if ($afHide)
                                 {
                                     $relParts[] = "     $('#javatbd" . $sq['rowdivid'] . "').hide();\n";
@@ -8548,7 +8587,7 @@ EOD;
                             $value = preg_replace('|\,|', '', $value);
                         }
 
-                        switch($type) // fix value before trying to save in DB : date and numeric only
+                        switch($type) // fix value before set it in $_SESSION : the data is reset when show it again to user.trying to save in DB : date only, but think it must be leave like it and filter oinly when save in DB
                         {
                             case 'D': //DATE
                                 $value=trim($value);
@@ -8571,15 +8610,6 @@ EOD;
                                     {
                                         $value="";// Or $value="INVALID" ? : dropdown is OK with this not default.
                                     }
-                                }
-                                break;
-                            case 'N': //NUMERICAL QUESTION TYPE
-                            case 'K': //MULTIPLE NUMERICAL QUESTION
-                                if (trim($value)=="") {
-                                    $value = "";
-                                }
-                                else {
-                                    $value = sanitize_float($value);
                                 }
                                 break;
                             case '|': //File Upload
@@ -10151,6 +10181,22 @@ EOD;
                     $this->knownVars['TOKEN:' . strtoupper($attribute)] = $blankVal;
                 }
             }
+        }
+
+        /**
+         * Add a flash message to state-key 'frontend{survey id}'
+         * The flash messages are templatereplaced in startpage.tstpl, {FLASHMESSAGE}
+         *
+         * @param string $type Yii type of flash: `error`, `notice`, 'success'
+         * @param string $message
+         * @param int $surveyid
+         * @return void
+         */
+        public static function addFrontendFlashMessage($type, $message, $surveyid) {
+            $originalPrefix = Yii::app()->user->getStateKeyPrefix();
+            Yii::app()->user->setStateKeyPrefix('frontend' . $surveyid);
+            Yii::app()->user->setFlash($type, $message);
+            Yii::app()->user->setStateKeyPrefix($originalPrefix);
         }
 
     }

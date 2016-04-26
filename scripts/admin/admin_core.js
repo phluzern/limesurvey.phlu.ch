@@ -37,31 +37,7 @@ $(document).ready(function(){
         },500);
     }
 
-    if(typeof(userdateformat) !== 'undefined')
-        {
-        $(".popupdate").each(function(i,e) {
-            format=$('#dateformat'+e.name).val();
-            if(!format) format = userdateformat;
-            $(e).datepicker({ dateFormat: format,
-                showOn: 'button',
-                changeYear: true,
-                changeMonth: true,
-                duration: 'fast'
-            }, $.datepicker.regional[LS.data.language]);
-        });
-        $(".popupdatetime").datepicker({ dateFormat: userdateformat+' 00:00',
-            showOn: 'button',
-            changeYear: true,
-            changeMonth: true,
-            duration: 'fast'
-        }, $.datepicker.regional[LS.data.language]);
-    }
     doToolTip();
-    $('.btntooltip').tooltip();
-
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    })
 
     $('button,input[type=submit],input[type=button],input[type=reset],.button').button();
     $('button,input[type=submit],input[type=button],input[type=reset],.button').addClass("limebutton");
@@ -192,6 +168,48 @@ $(document).ready(function(){
         });
         $("#question_type.none").change();
     }
+
+    /**
+     * Confirmation modal
+     *
+     * Either provide a data-href to redirect after OK button is clicked,
+     * or data-onclick to be run when OK is clicked.
+     */
+    $('#confirmation-modal').on('show.bs.modal', function(e) {
+        // .btn-ok is the confirm <a> in the modal
+        var href = $(e.relatedTarget).data('href');
+        var onclick = $(e.relatedTarget).data('onclick');
+
+        if (href != '' && href !== undefined) {
+            $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
+        }
+        else if (onclick != '' && onclick !== undefined) {
+
+            var onclick_fn = eval(onclick);
+
+            if (typeof onclick_fn == 'function') {
+                $(this).find('.btn-ok').on('click', function(ev) {
+                    $('#confirmation-modal').modal('hide');
+                    onclick_fn();
+                });
+            }
+            else {
+                throw "Confirmation modal: onclick is not a function.";
+            }
+
+        }
+        else {
+            throw "Confirmation modal: Found neither data-href or data-onclick.";
+        }
+
+        $(this).find('.modal-body-text').html($(e.relatedTarget).data('message'));
+    });
+
+    // Error modal
+    $('#error-modal').on('show.bs.modal', function(e) {
+        $(this).find('.modal-body-text').html($(e.relatedTarget).data('message'));
+    });
+
 });
 
 function qTypeDropdownInit()
@@ -309,6 +327,17 @@ function validatefilename (form, strmessage )
 
 function doToolTip()
 {
+    $('.btntooltip').tooltip();
+
+    // Since you can only have one option per data-toggle,
+    // we need this to enable both modal and toggle on one
+    // button. E.g., <button data-toggle='modal' data-tooltip='true' title="foo">...</button>
+    $('[data-tooltip="true"]').tooltip();
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+
     // ToolTip on menu
     $(".sf-menu li").each(function() {
         tipcontent=$(this).children("a").children("img").attr('alt');
@@ -352,6 +381,23 @@ function arrHasDupes( A ) {                          // finds any duplicate arra
     for (i=0; i<n; i++) {                        // outer loop uses each item i at 0 through n
         for (j=i+1; j<n; j++) {              // inner loop only compares items j at i+1 to n
             if (A[i]==A[j]) return true;
+    }}
+    return false;
+}
+
+/**
+ * Like arrHasDupes, but returns the duplicated item
+ *
+ * @param {array} A
+ * @return {mixed|boolean} Array item] or false if no duplicate is found
+ */
+function arrHasDupesWhich(A) {
+    var i, j, n;
+    n=A.length;
+    // to ensure the fewest possible comparisons
+    for (i=0; i<n; i++) {                        // outer loop uses each item i at 0 through n
+        for (j=i+1; j<n; j++) {              // inner loop only compares items j at i+1 to n
+            if (A[i]==A[j]) return A[i];
     }}
     return false;
 }
@@ -674,7 +720,8 @@ function linksInDialog()
             iframe.attr({
                 src: src,
             });
-            dialog.dialog("option", "title", title).dialog("open");
+            dialog.dialog("option", "title", title);
+            dialog.dialog("open");
         });
     });
 }

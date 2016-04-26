@@ -1782,7 +1782,7 @@ class statistics_helper {
                         $fname= "$al[1]";
                     }
 
-                    $bAnswer = false; // For view
+                    $bAnswer = true; // For view
                     $bSum = false;
                 }
 
@@ -2388,6 +2388,16 @@ class statistics_helper {
     */
     protected function displayResults($outputs, $results, $rt, $outputType, $surveyid, $sql, $usegraph, $browse, $sLanguage)
     {
+        // TODO: Should not be necessary - this combination should never happen
+        // File-upload is not displayed in PDF
+        if (($outputType=='pdf' && $outputs['qtype'] === "|"))
+        {
+            return array(
+                "statisticsoutput" => "",
+                "pdf" => null,
+                "astatdata" => array()
+            );
+        }
 
         /* Set up required variables */
         $TotalCompleted = 0; //Count of actually completed answers
@@ -2652,7 +2662,7 @@ class statistics_helper {
                     $fname= "$al[1]";
                 }
 
-                $bAnswer = false; // For view
+                $bAnswer = true; // For view
                 $bSum = false;
 
                 if ($browse===true && isset($_POST['showtextinline']) && $outputType=='pdf') {
@@ -2912,7 +2922,7 @@ class statistics_helper {
                 //edit labels and put them into another array
                 if ((incompleteAnsFilterState() != "complete"))
                 {
-                    $flatLabel = wordwrap(flattenText(gT("Not completed or Not displayed")), 20, "\n");
+                    $flatLabel = gT("Not completed or Not displayed");
                     // If the flatten label is empty (like for picture, or HTML, etc.)
                     // We replace it by the subquestion code
                     if($flatLabel == '')
@@ -2925,7 +2935,7 @@ class statistics_helper {
                 else
                 {
 
-                    $flatLabel = wordwrap(flattenText(gT("Not displayed")), 20, "\n");
+                    $flatLabel = gT("Not displayed");
                     // If the flatten label is empty (like for picture, or HTML, etc.)
                     // We replace it by the subquestion code
                     if($flatLabel == '')
@@ -3405,6 +3415,11 @@ class statistics_helper {
         {
             //$tablePDF = array();
             $tablePDF = array_merge_recursive($tablePDF, $footPDF);
+            if (!isset($headPDF))
+            {
+                // TODO: Why is $headPDF sometimes undefined here?
+                $headPDF = array();
+            }
             $this->pdf->headTable($headPDF,$tablePDF);
             //$this->pdf->tableintopdf($tablePDF);
 

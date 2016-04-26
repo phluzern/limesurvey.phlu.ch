@@ -14,6 +14,31 @@ return array(
         ),
     ),
 
+    // Bootstrap
+    // This package replace the Yiistrap register() function
+    // Then instead of using the composer dependency system for templates (will be used for LS3)
+    // We can use the package dependency system (easier for now)
+    'bootstrap' => array(
+        'basePath' => 'bootstrap',
+        'css'=> array(
+            /* Not needed for templates ! they use their own theme !
+            'css/bootstrap.css',
+            'css/yiistrap.css',
+            */
+        ),
+        'depends' => array(
+            'jquery',
+        )
+    ),
+
+    'fontawesome' => array(
+        //'basePath' => 'third_party.bootstrap', // Need fix third_party alias
+        'baseUrl' => 'third_party/fontawesome/',
+        'css'=> array(
+            'css/font-awesome.min.css',
+        ),
+    ),
+
     // jQuery UI
     'jqueryui' => array(
         'baseUrl' => 'third_party/jqueryui/',
@@ -261,4 +286,19 @@ return array(
             'leaflet.css'
         ),
     ),
+
+    // Bootstrap DateRangePicker
+    'bootstrap-daterangepicker' => array(
+        'baseUrl' => 'third_party/bootstrap-daterangepicker-2.1.19/',
+        'js' => array(
+            'moment.js',
+            'daterangepicker.js'
+        ),
+        'css' => array(
+            'daterangepicker.css'
+        ),
+        'depends' => array(
+            'bootstrap'
+        )
+    )
 );

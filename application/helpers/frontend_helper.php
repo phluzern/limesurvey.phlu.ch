@@ -270,11 +270,14 @@ function makeLanguageChanger($sSelectedLanguage)
             $aListLang[$sLangCode]=html_entity_decode($aLanguage['nativedescription'], ENT_COMPAT,'UTF-8').' - '.$aLanguage['description'];
         $sSelected=$sSelectedLanguage;
 
-        $sHTMLCode= CHtml::beginForm(App()->createUrl('surveys/publiclist'),'get');
-        $sHTMLCode.=CHtml::label(gT("Select your language"), 'lang',array('class'=>'hide label'));
+        $sHTMLCode= CHtml::beginForm(App()->createUrl('surveys/publiclist'),'get', array('class' => 'form-horizontal'));
+        $sHTMLCode.=CHtml::label(gT("Language:"), 'lang',array('class'=>'control-label col-xs-4 col-sm-8'));
+        $sHTMLCode .= "<div class='col-xs-7 col-sm-2'>";
         $sHTMLCode.= CHtml::dropDownList('lang', $sSelected,$aListLang,array('class'=>$sClass));
-        //$sHTMLCode.= CHtml::htmlButton(gT("Change the language"),array('type'=>'submit','id'=>"changelangbtn",'value'=>'changelang','name'=>'changelang','class'=>'jshide'));
+        $sHTMLCode .= "</div>";
+        $sHTMLCode .= "<div class='col-xs-1 col-sm-2'>";
         $sHTMLCode.="<button class='changelang jshide' value='changelang' id='changelangbtn' type='submit'>".gT("Change the language")."</button>";
+        $sHTMLCode .= "</div>";
         $sHTMLCode.= CHtml::endForm();
         return $sHTMLCode;
     }
@@ -282,6 +285,38 @@ function makeLanguageChanger($sSelectedLanguage)
     {
         return false;
     }
+}
+
+/**
+ * Construct flash message container
+ * Used in templatereplace to replace {FLASHMESSAGE} in startpage.tstpl
+ *
+ * @return string
+ */
+function makeFlashMessage() {
+    global $surveyid;
+    $html = "";
+
+    $language = Yii::app()->getLanguage();
+    $originalPrefix = Yii::app()->user->getStateKeyPrefix();
+    // Bug in Yii? Getting the state-key prefix changes the locale, so set the language manually after.
+    Yii::app()->setLanguage($language);
+    Yii::app()->user->setStateKeyPrefix('frontend');
+
+    $mapYiiToBootstrapClass = array(
+        'error' => 'danger',
+        'success' => 'success',
+        'notice' => 'info'
+        // no warning in Yii?
+    );
+
+    foreach (Yii::app()->user->getFlashes() as $key => $message) {
+        $html .= "<div class='alert alert-" . $mapYiiToBootstrapClass[$key] . " alert-dismissible flash-" . $key . "'>" . $message . "</div>\n";
+    }
+
+    Yii::app()->user->setStateKeyPrefix($originalPrefix);
+
+    return $html;
 }
 
 
@@ -581,7 +616,7 @@ function sendSubmitNotifications($surveyid)
     // TODO: What is holdpass, and is it OK to skip these lines if it is set? Related to 'Resume later' functionality
     if ($thissurvey['allowsave'] == "Y" && isset($_SESSION['survey_'.$surveyid]['scid']) && isset($_SESSION['survey_'.$surveyid]['holdpass']))
     {
-        $aReplacementVars['RELOADURL']="".Yii::app()->getController()->createUrl("/survey/index/sid/{$surveyid}/loadall/reload/scid/".$_SESSION['survey_'.$surveyid]['scid']."/loadname/".urlencode($_SESSION['survey_'.$surveyid]['holdname'])."/loadpass/".urlencode($_SESSION['survey_'.$surveyid]['holdpass'])."/lang/".urlencode(App()->language));
+        $aReplacementVars['RELOADURL']=Yii::app()->getController()->createUrl("/survey/index/sid/{$surveyid}/loadall/reload/scid/".$_SESSION['survey_'.$surveyid]['scid']."/lang/".urlencode(App()->language),array('loadname'=>$_SESSION['survey_'.$surveyid]['holdname'],'loadpass'=>$_SESSION['survey_'.$surveyid]['holdpass']));
         if ($bIsHTML)
         {
             $aReplacementVars['RELOADURL']="<a href='{$aReplacementVars['RELOADURL']}'>{$aReplacementVars['RELOADURL']}</a>";
@@ -753,22 +788,32 @@ function sendSubmitNotifications($surveyid)
 }
 
 /**
-* submitfailed : used in em_manager_helper.php
-*/
-function submitfailed($errormsg='')
+ * submitfailed : used in em_manager_helper.php
+ *
+ * "Unexpected error"
+ *
+ * Will send e-mail to adminemail if defined.
+ *
+ * @param string $errormsg
+ * @param string $query  Will be included in sent email
+ * @return string Error message
+ */
+function submitfailed($errormsg = '', $query = null)
 {
     global $debug;
     global $thissurvey;
     global $subquery, $surveyid;
 
-
-
-    $completed = "<br /><strong><font size='2' color='red'>"
-    . gT("Did Not Save")."</strong></font><br /><br />\n\n"
-    . gT("An unexpected error has occurred and your responses cannot be saved.")."<br /><br />\n";
+    $completed = "<p><span class='fa fa-exclamation-triangle'></span>&nbsp;<strong>"
+    . gT("Did Not Save")."</strong></p>"
+    . "<p>"
+    . gT("An unexpected error has occurred and your responses cannot be saved.")
+    . "</p>";
     if ($thissurvey['adminemail'])
     {
-        $completed .= gT("Your responses have not been lost and have been emailed to the survey administrator and will be entered into our database at a later point.")."<br /><br />\n";
+        $completed .= "<p>";
+        $completed .= gT("Your responses have not been lost and have been emailed to the survey administrator and will be entered into our database at a later point.");
+        $completed .= "</p>";
         if ($debug>0)
         {
             $completed.='Error message: '.htmlspecialchars($errormsg).'<br />';
@@ -777,16 +822,21 @@ function submitfailed($errormsg='')
         $email .= gT("DATA TO BE ENTERED","unescaped").":\n";
         foreach ($_SESSION['survey_'.$surveyid]['insertarray'] as $value)
         {
-            $email .= "$value: {$_SESSION['survey_'.$surveyid][$value]}\n";
+            if (isset($_SESSION['survey_' . $surveyid][$value]))
+            {
+                $email .= "$value: {$_SESSION['survey_'.$surveyid][$value]}\n";
+            }
+            else
+            {
+                $email .= "$value: N/A\n";
+            }
         }
         $email .= "\n".gT("SQL CODE THAT FAILED","unescaped").":\n"
         . "$subquery\n\n"
+        . ($query ? $query : '') . "\n\n"  // In case we have no global subquery, but an argument to the function
         . gT("ERROR MESSAGE","unescaped").":\n"
         . $errormsg."\n\n";
         SendEmailMessage($email, gT("Error saving results","unescaped"), $thissurvey['adminemail'], $thissurvey['adminemail'], "LimeSurvey", false, getBounceEmail($surveyid));
-        //echo "<!-- EMAIL CONTENTS:\n$email -->\n";
-        //An email has been sent, so we can kill off this session.
-        killSurveySession($surveyid);
     }
     else
     {
@@ -1040,7 +1090,6 @@ function buildsurveysession($surveyid,$preview=false)
                 sendCacheHeaders();
                 doHeader();
                 //TOKEN DOESN'T EXIST OR HAS ALREADY BEEN USED. EXPLAIN PROBLEM AND EXIT
-
                 $redata = compact(array_keys(get_defined_vars()));
                 echo templatereplace(file_get_contents($sTemplateViewPath."startpage.pstpl"),array(),$redata,'frontend_helper[1719]');
                 echo templatereplace(file_get_contents($sTemplateViewPath."survey.pstpl"),array(),$redata,'frontend_helper[1720]');
@@ -2290,4 +2339,18 @@ function getMove()
         }
     }
     return $move;
+}
+
+/**
+ * The DateTimePicker uses another date-format
+
+ * @param string $dateFormat - Like 'yyyy-mm-dd'
+ * @return string - E.g 'YYYY-MM-DD'
+ */
+function reverseDateToFitDatePicker($dateformat)
+{
+    // Reverse case, trick from here: http://stackoverflow.com/a/6612519/2138090
+    $newDateFormat = strtolower($dateformat) ^ strtoupper($dateformat) ^ $dateformat;
+    $newDateFormat = str_replace("hh", "HH", $newDateFormat);  // HH (hours) need still be in upper-case for 00-23 representation (not AM/PM)
+    return $newDateFormat;
 }

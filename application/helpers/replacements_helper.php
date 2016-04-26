@@ -27,51 +27,39 @@
 */
 function templatereplace($line, $replacements = array(), &$redata = array(), $debugSrc = 'Unspecified', $anonymized = false, $questionNum = NULL, $registerdata = array(), $bStaticReplacement = false, $oTemplate='')
 {
-
-    /*
-    global $clienttoken,$token,$sitename,$move,$showxquestions,$showqnumcode,$questioncode;
-    global $s_lang,$errormsg,$saved_id, $languagechanger,$captchapath,$loadname;
-    */
-    /*
-    $allowedvars = array('surveylist', 'sitename', 'clienttoken', 'rooturl', 'thissurvey', 'imageurl', 'defaulttemplate',
-    'percentcomplete', 'move', 'groupname', 'groupdescription', 'question', 'showxquestions',
-    'showgroupinfo', 'showqnumcode', 'questioncode', 'answer', 'navigator', 'help', 'totalquestions',
-    'surveyformat', 'completed', 'notanswered', 'privacy', 'surveyid', 'publicurl',
-    'templatedir', 'token', 'assessments', 's_lang', 'errormsg', 'saved_id', 'usertemplaterootdir',
-    'languagechanger', 'printoutput', 'captchapath', 'loadname');
-    */
     $allowedvars = array(
-    'assessments',
-    'captchapath',
-    'clienttoken',
-    'completed',
-    'errormsg',
-    'groupdescription',
-    'groupname',
-    'imageurl',
-    'languagechanger',
-    'loadname',
-    'move',
-    'navigator',
-    'moveprevbutton',
-    'movenextbutton',
-    'percentcomplete',
-    'privacy',
-    's_lang',
-    'saved_id',
-    'showgroupinfo',
-    'showqnumcode',
-    'showxquestions',
-    'sitename',
-    'sitelogo',
-    'surveylist',
-    'templatedir',
-    'thissurvey',
-    'token',
-    'totalBoilerplatequestions',
-    'totalquestions',
-    'questionindex',
-    'questionindexmenu',
+        'assessments',
+        'captchapath',
+        'clienttoken',
+        'completed',
+        'errormsg',
+        'groupdescription',
+        'groupname',
+        'imageurl',
+        'languagechanger',
+        'loadname',
+        'move',
+        'navigator',
+        'moveprevbutton',
+        'movenextbutton',
+        'percentcomplete',
+        'privacy',
+        's_lang',
+        'saved_id',
+        'showgroupinfo',
+        'showqnumcode',
+        'showxquestions',
+        'sitename',
+        'sitelogo',
+        'surveylist',
+        'templatedir',
+        'thissurvey',
+        'token',
+        'totalBoilerplatequestions',
+        'totalquestions',
+        'questionindex',
+        'questionindexmenu',
+        'flashmessage'
     );
 
     $varsPassed = array();
@@ -83,13 +71,6 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
             $varsPassed[] = $var;
         }
     }
-    //    if (count($varsPassed) > 0) {
-    //        log_message('debug', 'templatereplace() called from ' . $debugSrc . ' contains: ' . implode(', ', $varsPassed));
-    //    }
-    //    if (isset($redata['question'])) {
-    //        LimeExpressionManager::ShowStackTrace('has QID and/or SGA',$allowedvars);
-    //    }
-    //    extract($redata);   // creates variables for each of the keys in the array
 
     // Local over-rides in case not set above
     if (!isset($showgroupinfo)) { $showgroupinfo = Yii::app()->getConfig('showgroupinfo'); }
@@ -144,27 +125,23 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
         $oTemplate = Template::model()->getInstance($templatename);
     }
 
-    $aCssFiles = $oTemplate->config->files->css->filename;
-    $aJsFiles = $oTemplate->config->files->js->filename;
-    $aOtherFiles = $oTemplate->otherFiles;
-
-//var_dump($aOtherFiles); die();
     if(stripos ($line,"{TEMPLATECSS}"))
     {
-        // If the template has files for css, we can't publish the files one by one, but we must publish them as a whole directory
-        // TODO : extend asset manager so it check for file modification even in directory mode
-        if(!YII_DEBUG  || count($aOtherFiles)<0 ) //Asset manager off in debug mode
+        // This package is created in model TemplateConfiguration::createTemplatePackage
+        if(!YII_DEBUG)
         {
-            foreach($aCssFiles as $sCssFile)
-            {
-                if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile))
-                {
-                    Yii::app()->getClientScript()->registerCssFile( App()->getAssetManager()->publish( $oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile  ),$sCssFile['media']);
-                }
-            }
+            Yii::app()->clientScript->registerPackage( 'survey-template' );
         }
         else
         {
+            // In debug mode, the Asset Manager is not used
+            // So, dev don't need to update the directory date to get the new version of their template.
+            // They must think about refreshing their brower's cache (ctrl + F5)
+
+            $aCssFiles = $oTemplate->config->files->css->filename;
+            $aJsFiles = $oTemplate->config->files->js->filename;
+            $aOtherFiles = $oTemplate->otherFiles;
+
             foreach($aCssFiles as $sCssFile)
             {
                 if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile))
@@ -172,48 +149,7 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
                     Yii::app()->getClientScript()->registerCssFile("{$templateurl}$sCssFile",$sCssFile['media']);
                 }
             }
-        }
-        /* RTL CSS */
-        if (getLanguageRTL(App()->language))
-        {
-            $aCssFiles = $oTemplate->config->files->rtl->css->filename;
-            if(!YII_DEBUG)
-            {
-                foreach($aCssFiles as $sCssFile)
-                {
-                    if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile))
-                    {
-                        Yii::app()->getClientScript()->registerCssFile( App()->getAssetManager()->publish( $oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile  ),$sCssFile['media']);
-                    }
-                }
-            }
-            else
-            {
-                foreach($aCssFiles as $sCssFile)
-                {
-                    if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile))
-                    {
-                        Yii::app()->getClientScript()->registerCssFile("{$templateurl}$sCssFile",$sCssFile['media']);
-                    }
-                }
-            }
-        }
-    }
 
-    if(stripos ($line,"{TEMPLATEJS}"))
-    {
-        if(!YII_DEBUG) //Asset manager off in debug mode
-        {
-            foreach($aJsFiles as $sJsFile)
-            {
-                if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sJsFile))
-                {
-                    App()->getClientScript()->registerScriptFile( App()->getAssetManager()->publish( $oTemplate->path .DIRECTORY_SEPARATOR. $sJsFile ) );
-                }
-            }
-        }
-        else
-        {
             foreach($aJsFiles as $sJsFile)
             {
                 if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sJsFile))
@@ -222,23 +158,21 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
                 }
             }
 
-        }
-        /* RTL JS */
-        if (getLanguageRTL(App()->language))
-        {
-            $aJsFiles = (array) $oTemplate->config->files->rtl->js->filename;
-            if(!YII_DEBUG)
+
+            /* RTL CSS & JS */
+            if (getLanguageRTL(App()->language))
             {
-                foreach($aJsFiles as $aJsFile)
+                $aCssFiles = (array) $oTemplate->config->files->rtl->css->filename;
+                $aJsFiles  = (array) $oTemplate->config->files->rtl->js->filename;
+
+                foreach($aCssFiles as $sCssFile)
                 {
-                    if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $aJsFile))
+                    if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sCssFile))
                     {
-                        App()->getClientScript()->registerScriptFile( App()->getAssetManager()->publish( $oTemplate->path .DIRECTORY_SEPARATOR. $aJsFile ) );
+                        Yii::app()->getClientScript()->registerCssFile("{$templateurl}$sCssFile");
                     }
                 }
-            }
-            else
-            {
+
                 foreach($aJsFiles as $sJsFile)
                 {
                     if (file_exists($oTemplate->path .DIRECTORY_SEPARATOR. $sJsFile))
@@ -249,6 +183,8 @@ function templatereplace($line, $replacements = array(), &$redata = array(), $de
             }
         }
     }
+
+
     // surveyformat
     if (isset($thissurvey['format']))
     {
@@ -718,6 +654,7 @@ EOD;
     $coreReplacements['GROUPNAME'] = $_groupname;
     $coreReplacements['LANG'] = App()->language;
     $coreReplacements['LANGUAGECHANGER'] = isset($languagechanger) ? $languagechanger : '';    // global
+    $coreReplacements['FLASHMESSAGE'] = makeFlashMessage();  // TODO: Really generate this each time function is called? Only relevant for startpage.tstpl
     $coreReplacements['LOADERROR'] = isset($errormsg) ? $errormsg : ''; // global
     $coreReplacements['LOADFORM'] = $_loadform;
     $coreReplacements['LOADHEADING'] = gT("Load a previously saved survey");
@@ -984,4 +921,3 @@ function doHtmlSaveAll($move="")
     $aSaveAllButtons[$move]=$sSaveAllButtons;
     return $aSaveAllButtons[$move];
 }
-// Closing PHP tag intentionally omitted - yes, it is okay

@@ -33,8 +33,6 @@ class templates extends Survey_Common_Action
         parent::runWithParams($params);
     }
 
-
-
     /**
     * Exports a template
     *
@@ -374,7 +372,6 @@ class templates extends Survey_Common_Action
     */
     public function index($editfile = 'startpage.pstpl', $screenname = 'welcome', $templatename = '', $useindex=false)
     {
-
         if(!$templatename)
         {
             $templatename = Yii::app()->getConfig("defaulttemplate");
@@ -400,25 +397,6 @@ class templates extends Survey_Common_Action
         // This helps handle the load/save buttons)
         else
             unset(Yii::app()->session['step']);
-    }
-
-    /**
-    * templates::screenredirect()
-    * Function that modify order of arguments and pass to main viewing function i.e. view()
-    *
-    * @access public
-    * @param string $editfile
-    * @param string $templatename
-    * @param string $screenname
-    * @return void
-    */
-    public function screenredirect($editfile = 'startpage.pstpl', $templatename = '', $screenname = 'welcome')
-    {
-        if(!$templatename)
-        {
-            $templatename = Yii::app()->getConfig("defaulttemplate");
-        }
-        $this->getController()->redirect(array("admin/templates/sa/view/editfile/" . $editfile . "/screenname/" . $screenname . "/templatename/" . $templatename));
     }
 
     /**
@@ -472,7 +450,6 @@ class templates extends Survey_Common_Action
             $editfileindex = App()->request->getPost('editfileindex');
             $useindex = App()->request->getPost('useindex');
             $this->getController()->redirect(array('admin/templates/sa/view/editfile/'.$editfileindex.'/screenname/'.returnGlobal('screenname').'/templatename/'.$sTemplateName.'/useindex/'.$useindex));
-            //$this->getController()->redirect(array("admin/templates/sa/view/editfile/" . returnGlobal('editfile') . "/screenname/" . returnGlobal('screenname') . "/templatename/" . $sTemplateName));
         }
     }
 
@@ -641,25 +618,24 @@ class templates extends Survey_Common_Action
             $changedtext = returnGlobal('changes_cp');
             $changedtext = str_replace('<?', '', $changedtext);
             if (get_magic_quotes_gpc())
+            {
                 $changedtext = stripslashes($changedtext);
+            }
         }
 
-        $action = returnGlobal('action');
-        //$editfile = sanitize_filename(returnGlobal('editfile'));
-        $editfile = returnGlobal('editfile');
-        $sTemplateName = Template::templateNameFilter(App()->request->getPost('templatename'));
-        $editfileindex = App()->request->getPost('editfileindex');
-        $useindex = App()->request->getPost('useindex');
-
-        $screenname = returnGlobal('screenname');
-
+        $action          = returnGlobal('action');
+        $editfile        = returnGlobal('editfile');
+        $sTemplateName   = Template::templateNameFilter(App()->request->getPost('templatename'));
+        $editfileindex   = App()->request->getPost('editfileindex');
+        $useindex        = App()->request->getPost('useindex');
+        $screenname      = returnGlobal('screenname');
         $oEditedTemplate = Template::model()->getTemplateConfiguration($sTemplateName);
+        $files           = $this->_initfiles($sTemplateName);
+        $cssfiles        = $this->_initcssfiles($oEditedTemplate);
+        $jsfiles         = $this->_getEditableJsFiles($oEditedTemplate);
 
-        $files = $this->_initfiles($sTemplateName);
-        $cssfiles = $this->_initcssfiles($oEditedTemplate);
-        $jsfiles =  $this->_getEditableJsFiles($oEditedTemplate);
-
-        if ($action == "templatesavechanges" && $changedtext) {
+        if ($action == "templatesavechanges" && $changedtext)
+        {
             Yii::app()->loadHelper('admin/template');
             $changedtext = str_replace("\r\n", "\n", $changedtext);
 
@@ -673,42 +649,37 @@ class templates extends Survey_Common_Action
                 )
                 {
                     Yii::app()->user->setFlash('error',gT('Invalid template name'));
-
                     $this->getController()->redirect(array("admin/templates/sa/upload"));
                 }
 
                 $savefilename = gettemplatefilename(Yii::app()->getConfig('usertemplaterootdir') . "/" . $sTemplateName, $editfile);
 
-                if (is_writable($savefilename)) {
+                if (is_writable($savefilename))
+                {
                     if (!$handle = fopen($savefilename, 'w'))
                     {
                         Yii::app()->user->setFlash('error',gT('Could not open file '). $savefilename);
-
                         $this->getController()->redirect(array("admin/templates/sa/upload"));
                     }
 
                     if (!fwrite($handle, $changedtext))
                     {
                         Yii::app()->user->setFlash('error',gT('Could not write file '). $savefilename);
-
                         $this->getController()->redirect(array("admin/templates/sa/upload"));
                     }
+
+                    $oEditedTemplate->actualizeLastUpdate();
 
                     fclose($handle);
                 }
                 else
                 {
                     Yii::app()->user->setFlash('error',"The file $savefilename is not writable");
-
                     $this->getController()->redirect(array("admin/templates/sa/upload"));
                 }
 
             }
         }
-        //      'admin/templates/sa/view/editfile/'.$_GET['editfile'].'/screenname/'.$screenname.'/templatename/'.$sTemplateName.'/useindex/'.$_GET['useindex'];
-        //echo "admin/templates/sa/view/editfile/" . $editfile . "/screenname/" . $screenname . "/templatename/" . $sTemplateName;
-        //die("OK");
-        //$this->getController()->redirect(array("admin/templates/sa/view/editfile/" . $editfile . "/screenname/" . $screenname . "/templatename/" . $sTemplateName));
         $this->getController()->redirect(array('admin/templates/sa/view/editfile/'.$editfileindex.'/screenname/'.$screenname.'/templatename/'.$sTemplateName.'/useindex/'.$useindex));
     }
 
