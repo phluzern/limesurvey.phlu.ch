@@ -2,6 +2,9 @@
 .project
 /upload/surveys/*
 /styles/gringegreen/images/Thumbs.db
+/upload/templates/*
+!/upload/templates/PHLU_ubuntu_orange
+!/upload/templates/PHLU_neu
 /upload/labels/*
 !/upload/labels/readme.txt
 /tmp/runtime/HTML
