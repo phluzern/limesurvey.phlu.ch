@@ -1,0 +1,147 @@
+/**
+* CUSTOM CSS
+*/
+html, textarea,.question, .survey-question-answer select, .survey-question-answer input, table, tr, td, th, .submit, button {
+    font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+}
+
+img#logo {
+    margin-left: 15px;
+}
+
+#survey-wrapper {
+    width:auto;
+    max-width: 868px;
+}
+
+.surveyname {
+    padding-left: 15px;
+}
+
+.survey-description, .survey-survey-description, .survey-groupdescription {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+}
+
+.survey-groupname {
+    padding-right: 250px;
+}
+
+.survey-question-help {
+    font-size: 0.8em;
+}
+
+.survey-question-help img {
+    padding: 5px 5px 0px 0px;
+}
+
+.survey-question-help p {
+    padding-left: 25px;
+}
+
+.survey-cleared {
+    padding:20px;
+    background-color: #f0fdff;
+    border: 1px solid #00677d
+}
+
+.survey-list-wrapper {
+    text-align: left;
+    background: #fafeff;
+}
+
+.survey-privacy {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+#limesurvey table.question tbody th.answertext, #limesurvey table.question tbody th.arraycaptionleft, .survey-navigator, .clear-all, .save-all, .register, .survey-load, .load-survey-label, .save-survey-label, .load-survey, .save-survey {
+    text-align: left;
+}
+
+#limesurvey table.question thead tr.header_row {
+    background-color: #fafeff;
+}
+
+#progress-wrapper {
+    float: right;
+    padding-top: 20px;
+    position: relative;
+    right: -10px;
+    z-index: 10;
+}
+
+.array-flexible-column col.even, table.question tr.array1:hover, table.question tr.array2:hover {
+    background-color: #dffbff;
+}
+
+.array1, .array2, .dragDropTable .dragDropChoiceList li, .dragDropTable .dragDropRankList li, .array-flexible-column col.odd {
+    background-color: #f0fdff;
+}
+
+.asterisk {
+    color: #000000;
+    padding: 0 5px 0 0;
+}
+
+.choice-5-pt-radio .survey-question-answer li, .list-radio-flexible .survey-question-answer li, .list-radio .survey-question-answer li, .list-with-comment .survey-question-answer li, .multiple-opt .survey-question-answer li, .multiple-opt-comments .survey-question-answer li, .multiple-short-txt .survey-question-answer li, .numeric-multi .survey-question-answer li, .yes-no .survey-question-answer li, .gender .survey-question-answer li, .list-dropdown-flexible p.question, .list-dropdown p.question, .numeric p.question, .date p.question {
+    margin-left: 0;
+}
+
+.list-with-comment div.list {
+    padding-left: 0;
+}
+
+.list-with-comment p.comment {
+    font-size: 0.9em;
+}
+
+.multiple-opt .survey-question-answer li input, .multiple-opt-comments .survey-question-answer li .option input, .list-radio .survey-question-answer li input, .list-with-comment .survey-question-answer li input {
+    margin-top: 5px;
+}
+
+.multiple-opt-comments ul li span.option {
+    padding-left: 25px;
+    text-indent: -25px;
+}
+
+.multiple-short-txt ul li label, .numeric-multi ul li label {
+    font-size: 0.9em;
+    padding: 0.4em 0 0.1em 0em;
+}
+
+.questionhelp, a.upload {
+    font-weight: normal;
+}
+
+.textarea, .text-short input, .text-short textarea, .text-long textarea, .text-huge textarea, .load-form table, .save-form table {
+    color: #000000;
+    margin: 0;
+}
+
+div.em_num_answers.good {
+    color: #000000;
+}
+
+table.question {
+    width: 100%;
+}
+
+.printouttitle {
+    padding: 0;
+}
+
+.printouttable {
+    margin-top:15px;
+}
+
+.printouttable th {
+    text-align: left;
+}
+
+.printouttable td:first-child {
+    background-color: #f0fdff;
+    font-weight: normal;
+    text-align: left;
+}
