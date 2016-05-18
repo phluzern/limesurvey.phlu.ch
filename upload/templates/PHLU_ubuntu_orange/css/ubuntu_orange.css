@@ -4522,7 +4522,12 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .navbar-default .navbar-brand.phluLogo img {
 padding:10px;
     background-color: white;
+    width: 210px;
+}
+    @media (max-width: 768px) {
+  .navbar-default .navbar-brand.phluLogo img {
     width: 100%;
+}
 }
 
 .navbar-default .navbar-brand:hover,
