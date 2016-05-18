@@ -5,7 +5,7 @@
         <div class="row question-wrapper">
             <div class="col-sm-12 questiontext">
                 <h4 class="qnumcode">
-                <span class="text-danger glyphicon-asterisk-after">{QUESTION_MANDATORY}</span>{QUESTION_NUMBER} {QUESTION_CODE}  {QUESTION_TEXT}
+                <span class="text-danger glyphicon-asterisk-mandatory">{QUESTION_MANDATORY}</span>{QUESTION_NUMBER} {QUESTION_CODE}  {QUESTION_TEXT}
                 </h4>
             </div>
         </div>
